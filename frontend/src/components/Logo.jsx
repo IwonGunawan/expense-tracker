@@ -1,9 +1,4 @@
-import { useId } from 'react';
-
 export default function Logo({ size = 34, withText = false, subtitle, className = '' }) {
-  const id = useId();
-  const grad = `logo-grad-${id.replace(/[:]/g, '')}`;
-
   return (
     <span className={`logo ${className}`.trim()}>
       <svg
@@ -14,24 +9,18 @@ export default function Logo({ size = 34, withText = false, subtitle, className 
         aria-label="Expense Tracker"
         className="logo-mark"
       >
-        <defs>
-          <linearGradient id={grad} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#4F46E5" />
-            <stop offset="55%" stopColor="#7C3AED" />
-            <stop offset="100%" stopColor="#06B6D4" />
-          </linearGradient>
-        </defs>
-        <rect width="64" height="64" rx="16" fill={`url(#${grad})`} />
+        <rect width="64" height="64" rx="16" fill="#059669" />
+        <rect x="14" y="18" width="36" height="28" rx="7" fill="#ffffff" opacity="0.14" />
         <path
           d="M20 24h20a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H20a4 4 0 0 1-4-4V28a4 4 0 0 1 4-4z"
           fill="none"
-          stroke="#fff"
+          stroke="#ffffff"
           strokeWidth="3.2"
           strokeLinejoin="round"
         />
-        <path d="M16 30h28" stroke="#fff" strokeWidth="3.2" strokeLinecap="round" />
-        <circle cx="36" cy="38" r="2.6" fill="#fff" />
-        <path d="M24 20.5l4.5 4.5" stroke="#fff" strokeWidth="3.2" strokeLinecap="round" />
+        <path d="M16 31h28" stroke="#ffffff" strokeWidth="3.2" strokeLinecap="round" />
+        <circle cx="36.5" cy="38.5" r="2.6" fill="#ffffff" />
+        <path d="M24 20.5l4.5 4.5" stroke="#ffffff" strokeWidth="3.2" strokeLinecap="round" />
       </svg>
 
       {withText && (

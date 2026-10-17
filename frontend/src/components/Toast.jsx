@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { useI18n } from '../i18n';
 import Icon from './Icon';
 
 const ToastCtx = createContext(null);
@@ -9,10 +10,11 @@ export function useToast() {
 const ICONS = { success: 'check', error: 'alert', info: 'alert' };
 
 export function ToastProvider({ children }) {
+  const { t } = useI18n();
   const [items, setItems] = useState([]);
 
   const remove = useCallback((id) => {
-    setItems((list) => list.filter((t) => t.id !== id));
+    setItems((list) => list.filter((it) => it.id !== id));
   }, []);
 
   const push = useCallback(
@@ -37,16 +39,16 @@ export function ToastProvider({ children }) {
     <ToastCtx.Provider value={value}>
       {children}
       <div className="toast-viewport">
-        {items.map((t) => (
-          <div key={t.id} className={`toast toast-${t.type}`} role="status">
+        {items.map((it) => (
+          <div key={it.id} className={`toast toast-${it.type}`} role="status">
             <span className="toast-icon">
-              <Icon name={ICONS[t.type] ?? 'alert'} size={16} />
+              <Icon name={ICONS[it.type] ?? 'alert'} size={16} />
             </span>
-            <span className="toast-msg">{t.message}</span>
+            <span className="toast-msg">{it.message}</span>
             <button
               className="toast-close"
-              onClick={() => remove(t.id)}
-              aria-label="Tutup"
+              onClick={() => remove(it.id)}
+              aria-label={t('toast.close')}
             >
               <Icon name="close" size={14} />
             </button>

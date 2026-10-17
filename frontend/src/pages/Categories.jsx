@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
+import { useI18n } from '../i18n';
 import { formatIDR } from '../utils';
 import ConfirmModal from '../components/ConfirmModal';
 import EmptyState from '../components/EmptyState';
@@ -8,6 +9,7 @@ import { useToast } from '../components/Toast';
 
 export default function CategoriesPage() {
   const toast = useToast();
+  const { t } = useI18n();
   const [categories, setCategories] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
@@ -52,7 +54,7 @@ export default function CategoriesPage() {
     try {
       await api('/categories', { method: 'POST', body: { name: name.trim() } });
       setName('');
-      toast.success('Kategori ditambahkan');
+      toast.success(t('categories.saved'));
       await load();
     } catch (err) {
       toast.error(err.message);
@@ -73,7 +75,7 @@ export default function CategoriesPage() {
         method: 'PATCH',
         body: { name: editName.trim() },
       });
-      toast.success('Kategori diperbarui');
+      toast.success(t('categories.updated'));
       setEditingId(null);
       await load();
     } catch (err) {
@@ -85,7 +87,7 @@ export default function CategoriesPage() {
     if (!pendingDelete) return;
     try {
       await api(`/categories/${pendingDelete.id}`, { method: 'DELETE' });
-      toast.success('Kategori dihapus');
+      toast.success(t('categories.deleted'));
       setPendingDelete(null);
       await load();
     } catch (err) {
@@ -98,8 +100,8 @@ export default function CategoriesPage() {
     return (
       <>
         <div className="page-head">
-          <h1 className="page-title">Kategori</h1>
-          <p className="muted">Memuat...</p>
+          <h1 className="page-title">{t('categories.title')}</h1>
+          <p className="muted">{t('common.loading')}</p>
         </div>
       </>
     );
@@ -109,8 +111,8 @@ export default function CategoriesPage() {
     <>
       <div className="page-head">
         <div>
-          <h1 className="page-title">Kategori</h1>
-          <p className="muted">Kelola kategori pengeluaranmu.</p>
+          <h1 className="page-title">{t('categories.title')}</h1>
+          <p className="muted">{t('categories.subtitle')}</p>
         </div>
       </div>
 
@@ -119,11 +121,11 @@ export default function CategoriesPage() {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Nama kategori baru, mis: Transport"
+          placeholder={t('categories.placeholder')}
           maxLength={50}
         />
         <button type="submit" className="btn btn-primary" disabled={saving}>
-          <Icon name="plus" size={16} /> Tambah
+          <Icon name="plus" size={16} /> {t('common.add')}
         </button>
       </form>
 
@@ -131,8 +133,8 @@ export default function CategoriesPage() {
         <div className="panel">
           <EmptyState
             icon="tag"
-            title="Belum ada kategori"
-            hint="Tambahkan kategori untuk mulai mencatat pengeluaran."
+            title={t('categories.empty')}
+            hint={t('categories.emptyHint')}
           />
         </div>
       ) : (
@@ -150,14 +152,14 @@ export default function CategoriesPage() {
                       autoFocus
                     />
                     <button type="button" className="btn btn-primary small" onClick={saveEdit}>
-                      Simpan
+                      {t('common.save')}
                     </button>
                     <button
                       type="button"
                       className="ghost small"
                       onClick={() => setEditingId(null)}
                     >
-                      Batal
+                      {t('common.cancel')}
                     </button>
                   </div>
                 ) : (
@@ -168,7 +170,7 @@ export default function CategoriesPage() {
                         <button
                           type="button"
                           className="icon-btn"
-                          title="Ubah"
+                          title={t('common.edit')}
                           onClick={() => startEdit(cat)}
                         >
                           <Icon name="pencil" size={16} />
@@ -176,7 +178,7 @@ export default function CategoriesPage() {
                         <button
                           type="button"
                           className="icon-btn danger"
-                          title="Hapus"
+                          title={t('common.delete')}
                           onClick={() => setPendingDelete(cat)}
                         >
                           <Icon name="trash" size={16} />
@@ -185,7 +187,7 @@ export default function CategoriesPage() {
                     </div>
                     <div className="cat-card-stat">
                       <span className="cat-total mono">{formatIDR(stat.total)}</span>
-                      <span className="muted">{stat.count} transaksi</span>
+                      <span className="muted">{t('categories.count', { count: stat.count })}</span>
                     </div>
                   </>
                 )}
@@ -197,9 +199,9 @@ export default function CategoriesPage() {
 
       <ConfirmModal
         open={pendingDelete !== null}
-        title={`Hapus kategori "${pendingDelete?.name ?? ''}"?`}
-        message="Kategori yang masih dipakai pengeluaran tidak bisa dihapus."
-        confirmLabel="Hapus"
+        title={t('categories.confirmTitle', { name: pendingDelete?.name ?? '' })}
+        message={t('categories.confirmMsg')}
+        confirmLabel={t('common.delete')}
         danger
         onCancel={() => setPendingDelete(null)}
         onConfirm={commitDelete}

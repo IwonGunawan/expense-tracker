@@ -1,13 +1,16 @@
+import { useI18n } from '../i18n';
 import { formatIDR } from '../utils';
 import EmptyState from './EmptyState';
 
 export default function CategoryBar({ data }) {
+  const { t } = useI18n();
+
   if (!data || data.length === 0) {
     return (
       <EmptyState
         icon="trend"
-        title="Belum ada pengeluaran"
-        hint="Tambahkan pengeluaran untuk melihat rekap."
+        title={t('chart.empty')}
+        hint={t('chart.emptyHint')}
       />
     );
   }

@@ -1,18 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { clearToken, clearUser, getUser } from '../api';
+import { useI18n, LangSwitch } from '../i18n';
 import { initialOf } from '../utils';
 import Icon from './Icon';
 import Logo from './Logo';
 
-const LINKS = [
-  { to: '/', label: 'Dashboard', icon: 'dashboard', end: true },
-  { to: '/expenses', label: 'Pengeluaran', icon: 'wallet' },
-  { to: '/categories', label: 'Kategori', icon: 'tag' },
-  { to: '/settings', label: 'Pengaturan', icon: 'settings' },
-];
-
 function ProfileMenu({ email, onLogout }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -30,7 +25,7 @@ function ProfileMenu({ email, onLogout }) {
       <button
         type="button"
         className="avatar profile-trigger"
-        aria-label="Menu profil"
+        aria-label={t('profile.aria')}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
@@ -47,7 +42,7 @@ function ProfileMenu({ email, onLogout }) {
               onLogout();
             }}
           >
-            <Icon name="logout" size={16} /> Keluar
+            <Icon name="logout" size={16} /> {t('logout')}
           </button>
         </div>
       )}
@@ -56,6 +51,7 @@ function ProfileMenu({ email, onLogout }) {
 }
 
 export default function Layout() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [email, setEmail] = useState(null);
 
@@ -69,14 +65,21 @@ export default function Layout() {
     navigate('/login', { replace: true });
   };
 
+  const LINKS = [
+    { to: '/', label: t('nav.dashboard'), icon: 'dashboard', end: true },
+    { to: '/expenses', label: t('nav.expenses'), icon: 'wallet' },
+    { to: '/categories', label: t('nav.categories'), icon: 'tag' },
+    { to: '/settings', label: t('nav.settings'), icon: 'settings' },
+  ];
+
   return (
     <div className="shell">
       <header className="topbar">
         <div className="topbar-left">
-          <Logo size={36} withText subtitle="Kelola pengeluaran" />
+          <Logo size={36} withText subtitle={t('logo.tagline')} />
         </div>
 
-        <nav className="topbar-nav" aria-label="Navigasi">
+        <nav className="topbar-nav" aria-label={t('nav.aria')}>
           {LINKS.map((link) => (
             <NavLink
               key={link.to}
@@ -89,6 +92,7 @@ export default function Layout() {
           ))}
         </nav>
 
+        <LangSwitch />
         <ProfileMenu email={email} onLogout={logout} />
       </header>
 
@@ -98,7 +102,7 @@ export default function Layout() {
         </div>
       </main>
 
-      <nav className="bottom-nav" aria-label="Navigasi bawah">
+      <nav className="bottom-nav" aria-label={t('nav.bottomAria')}>
         {LINKS.map((link) => (
           <NavLink
             key={link.to}

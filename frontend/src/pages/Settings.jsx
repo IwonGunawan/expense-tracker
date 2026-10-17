@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { api, getUser, setUser } from '../api';
+import { useI18n } from '../i18n';
 import ConfirmModal from '../components/ConfirmModal';
 import Icon from '../components/Icon';
 import { useToast } from '../components/Toast';
 
 export default function Settings() {
   const toast = useToast();
+  const { t } = useI18n();
   const [email, setEmail] = useState(getUser()?.email ?? '');
 
   const [currentPw, setCurrentPw] = useState('');
@@ -29,11 +31,11 @@ export default function Settings() {
   const changePassword = async (e) => {
     e.preventDefault();
     if (newPw.length < 6) {
-      toast.error('Password baru minimal 6 karakter');
+      toast.error(t('settings.pwMinError'));
       return;
     }
     if (newPw !== confirmPw) {
-      toast.error('Konfirmasi password tidak cocok');
+      toast.error(t('settings.pwMismatchError'));
       return;
     }
     setPwBusy(true);
@@ -45,7 +47,7 @@ export default function Settings() {
       setCurrentPw('');
       setNewPw('');
       setConfirmPw('');
-      toast.success('Password diganti');
+      toast.success(t('settings.pwChanged'));
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -72,27 +74,27 @@ export default function Settings() {
     <>
       <div className="page-head">
         <div>
-          <h1 className="page-title">Pengaturan</h1>
-          <p className="muted">Kelola akun dan keamanan.</p>
+          <h1 className="page-title">{t('settings.title')}</h1>
+          <p className="muted">{t('settings.subtitle')}</p>
         </div>
       </div>
 
       <div className="panel">
-        <h2>Akun</h2>
+        <h2>{t('settings.account')}</h2>
         <div className="account-row">
           <span className="avatar avatar-lg">{email?.[0]?.toUpperCase() ?? '?'}</span>
           <div>
-            <p className="strong">{email || 'Memuat...'}</p>
-            <p className="muted">Email terdaftar akun ini.</p>
+            <p className="strong">{email || t('common.loading')}</p>
+            <p className="muted">{t('settings.accountNote')}</p>
           </div>
         </div>
       </div>
 
       <div className="panel">
-        <h2>Ganti Password</h2>
+        <h2>{t('settings.changePassword')}</h2>
         <form onSubmit={changePassword} className="settings-form">
           <label className="field">
-            <span className="field-label">Password saat ini</span>
+            <span className="field-label">{t('settings.currentPassword')}</span>
             <input
               type="password"
               value={currentPw}
@@ -103,7 +105,7 @@ export default function Settings() {
           </label>
           <div className="settings-row">
             <label className="field">
-              <span className="field-label">Password baru</span>
+              <span className="field-label">{t('settings.newPassword')}</span>
               <input
                 type="password"
                 value={newPw}
@@ -114,7 +116,7 @@ export default function Settings() {
               />
             </label>
             <label className="field">
-              <span className="field-label">Konfirmasi password baru</span>
+              <span className="field-label">{t('settings.confirmNewPassword')}</span>
               <input
                 type="password"
                 value={confirmPw}
@@ -125,28 +127,28 @@ export default function Settings() {
             </label>
           </div>
           <button type="submit" disabled={pwBusy}>
-            {pwBusy ? 'Menyimpan...' : 'Ganti Password'}
+            {pwBusy ? t('common.saving') : t('settings.changePassword')}
           </button>
         </form>
       </div>
 
       <div className="panel panel-danger">
-        <h2>Danger Zone</h2>
-        <p className="muted">Hapus akun beserta seluruh data secara permanen.</p>
+        <h2>{t('settings.dangerZone')}</h2>
+        <p className="muted">{t('settings.dangerNote')}</p>
         <button
           type="button"
           className="btn-danger"
           onClick={() => setPendingDelete(true)}
         >
-          <Icon name="trash" size={16} /> Hapus Akun
+          <Icon name="trash" size={16} /> {t('settings.deleteAccount')}
         </button>
       </div>
 
       <ConfirmModal
         open={pendingDelete}
-        title="Hapus akun?"
-        message="Semua pengeluaran dan kategori akan hilang permanen. Masukkan password untuk konfirmasi."
-        confirmLabel="Hapus Akun"
+        title={t('settings.confirmTitle')}
+        message={t('settings.confirmMsg')}
+        confirmLabel={t('settings.deleteAccount')}
         danger
         busy={deleteBusy}
         onCancel={() => {
@@ -156,7 +158,7 @@ export default function Settings() {
         onConfirm={deleteAccount}
       >
         <label className="field">
-          <span className="field-label">Password</span>
+          <span className="field-label">{t('settings.password')}</span>
           <input
             type="password"
             value={deletePw}

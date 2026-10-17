@@ -1,6 +1,6 @@
 # Expense Tracker
 
-Aplikasi web responsive untuk catat pengeluaran harian. Auth JWT, kategori custom, filter bulan + kategori, pagination, rekap per kategori, dan chart pengeluaran per bulan.
+Responsive web app for recording daily expenses. JWT auth, custom categories, month + category filters, pagination, per-category recap, and a monthly spending chart. UI language switchable between English (default) and Indonesian.
 
 ## Stack
 
@@ -8,23 +8,23 @@ Aplikasi web responsive untuk catat pengeluaran harian. Auth JWT, kategori custo
 - **Backend**: NestJS 11 + TypeORM + mysql2 (port 3200)
 - **Database**: MySQL/MariaDB via XAMPP
 
-## Prasyarat
+## Prerequisites
 
-- Node.js 20+ (sudah dipakai Node 22 di sini)
-- XAMPP MySQL jalan (socket-only di `/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock`)
-- Database `expense-tracker` sudah dibuat (lihat bagian Setup DB)
+- Node.js 20+ (Node 22 used here)
+- XAMPP MySQL running (socket-only at `/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock`)
+- Database `expense-tracker` created (see Database Setup)
 
-## Setup database
+## Database Setup
 
-Kalau DB belum ada:
+If the DB does not exist yet:
 
 ```bash
 /Applications/XAMPP/xamppfiles/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`expense-tracker\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 ```
 
-Tabel dibuat otomatis oleh TypeORM saat backend jalan (`synchronize: true`). Kalau pakai MySQL TCP biasa, ubah `backend/.env`: isi `DB_HOST`, kosongkan `DB_SOCKET_PATH`.
+Tables are created automatically by TypeORM when the backend starts (`synchronize: true`). For a regular TCP MySQL setup, edit `backend/.env`: set `DB_HOST` and clear `DB_SOCKET_PATH`.
 
-## Jalankan
+## Run
 
 Terminal 1 (backend):
 
@@ -42,21 +42,21 @@ npm install
 npm run dev
 ```
 
-Buka http://localhost:5173. Dependency frontend/backend: frontend proxy `/api` ke backend port 3200.
+Open http://localhost:5173. Frontend proxy: `/api` forwards to backend on port 3200.
 
-## Halaman
+## Pages
 
-- `/login` — login / daftar
-- `/` — Dashboard: ringkasan bulan ini, chart per bulan (1 tahun), rekap kategori
-- `/expenses` — pengeluaran: tambah/edit (modal), filter bulan+kategori, pagination
-- `/categories` — kelola kategori custom
-- `/settings` — profil, ganti password, hapus akun
+- `/login` — sign in / sign up
+- `/` — Dashboard: current-month summary, 12-month chart, category recap
+- `/expenses` — expenses: add/edit (modal), month + category filters, pagination
+- `/categories` — manage custom categories
+- `/settings` — profile, change password, delete account
 
-Navigasi: tabs di topbar (desktop), bottom nav (mobile). Logout di menu icon profil (kanan atas).
+Navigation: tabs in the topbar (desktop), bottom nav (mobile). Logout via the profile avatar menu (top right). The `EN`/`ID` button switches language.
 
 ## Backend env
 
-`backend/.env` (sudah ada, salin `.env.example` kalau perlu):
+`backend/.env` (already present, copy `.env.example` if needed):
 
 ```
 PORT=3200
@@ -68,38 +68,38 @@ DB_DATABASE=expense-tracker
 JWT_SECRET=change-me-in-production-please
 ```
 
-## Endpoint
+## Endpoints
 
-Semua (kecuali register/login) butuh header `Authorization: Bearer <token>`.
+All except register/login require the header `Authorization: Bearer <token>`.
 
 - `POST /auth/register` — `{ email, password }`
 - `POST /auth/login` — `{ email, password }`
-- `GET /auth/me` — profil user
+- `GET /auth/me` — user profile
 - `PATCH /auth/me/password` — `{ currentPassword, newPassword }`
-- `DELETE /auth/me` — `{ password }` (hapus akun + semua data)
+- `DELETE /auth/me` — `{ password }` (delete account + all data)
 - `GET /categories`
 - `POST /categories` — `{ name }`
 - `PATCH /categories/:id` — `{ name }`
-- `DELETE /categories/:id` — gagal (400) kalau kategori masih dipakai expense
-- `GET /expenses?page=&limit=&from=&to=&categoryId=` — list + pagination + filter
-- `GET /expenses/summary?from=&to=&categoryId=` — total + rekap per kategori
-- `GET /expenses/monthly?year=` — total per bulan (12 bulan)
+- `DELETE /categories/:id` — fails (400) if the category is still used by expenses
+- `GET /expenses?page=&limit=&from=&to=&categoryId=` — list + pagination + filters
+- `GET /expenses/summary?from=&to=&categoryId=` — total + per-category recap
+- `GET /expenses/monthly?year=` — total per month (12 months)
 - `POST /expenses` — `{ amount, categoryId, description, date }`
 - `PATCH /expenses/:id`
 - `DELETE /expenses/:id`
 
-Data tiap user terisolasi: semua query expense/category difilter `userId` dari JWT.
+Per-user data isolation: every expense/category query is filtered by `userId` taken from the JWT.
 
 ## Test
 
 ```bash
 cd backend
-npm test    # 4 test pagination util
+npm test    # 4 pagination util tests
 npm run lint
 ```
 
-## Catatan produksi
+## Production notes
 
-- Set `NODE_ENV=production` → `synchronize` mati. Pakai migration TypeORM untuk schema.
-- Ganti `JWT_SECRET` dengan nilai acak yang kuat.
-- Tambahkan refresh token / reset password kalau butuh multi-device.
+- Set `NODE_ENV=production` → `synchronize` is disabled. Use TypeORM migrations for the schema.
+- Replace `JWT_SECRET` with a strong random value.
+- Add refresh tokens / password reset if multi-device support is needed.

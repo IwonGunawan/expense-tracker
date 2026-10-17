@@ -1,13 +1,19 @@
+let LOCALE = 'en-US';
+
+export function setLocale(locale) {
+  LOCALE = locale;
+}
+
 export function formatIDR(value) {
   const n = Number(value) || 0;
-  return 'Rp ' + new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(n);
+  return 'Rp ' + new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0 }).format(n);
 }
 
 export function formatDateID(dateStr) {
   if (!dateStr) return '—';
   const d = new Date(dateStr);
   if (Number.isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export function todayID() {
@@ -21,9 +27,9 @@ export function initialOf(email) {
 }
 
 export function formatNumberID(value) {
-  return String(value ?? '')
-    .replace(/\D/g, '')
-    .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const digits = String(value ?? '').replace(/\D/g, '');
+  if (!digits) return '';
+  return new Intl.NumberFormat(LOCALE).format(Number(digits));
 }
 
 export function parseNumberID(value) {
@@ -46,6 +52,6 @@ export function currentMonthRange() {
 
 export function shortMonths() {
   return Array.from({ length: 12 }, (_, i) =>
-    new Date(2024, i, 1).toLocaleDateString('id-ID', { month: 'short' }),
+    new Date(2024, i, 1).toLocaleDateString(LOCALE, { month: 'short' }),
   );
 }

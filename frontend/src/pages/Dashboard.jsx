@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import { useI18n } from '../i18n';
 import { currentMonthRange, formatIDR } from '../utils';
 import CategoryBar from '../components/CategoryBar';
 import ExpenseFormModal from '../components/ExpenseFormModal';
@@ -8,11 +9,11 @@ import MonthlyChart from '../components/MonthlyChart';
 import StatCard from '../components/StatCard';
 import { useToast } from '../components/Toast';
 
-const MONTH_NAME = new Date().toLocaleDateString('id-ID', { month: 'long' });
 const YEAR = new Date().getFullYear();
 
 export default function Dashboard() {
   const toast = useToast();
+  const { t, locale } = useI18n();
   const [data, setData] = useState(null);
   const [categories, setCategories] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -36,8 +37,8 @@ export default function Dashboard() {
   if (!data) {
     return (
       <div className="page-head">
-        <h1 className="page-title">Dashboard</h1>
-        <p className="muted">Memuat data...</p>
+        <h1 className="page-title">{t('nav.dashboard')}</h1>
+        <p className="muted">{t('dashboard.loading')}</p>
       </div>
     );
   }
@@ -46,13 +47,14 @@ export default function Dashboard() {
   const transactions = summary.categories.reduce((s, c) => s + c.count, 0);
   const avg = transactions ? summary.overall / transactions : 0;
   const yearTotal = monthly.months.reduce((s, m) => s + m.total, 0);
+  const monthName = new Date().toLocaleDateString(locale, { month: 'long' });
 
   return (
     <>
       <div className="page-head">
         <div>
-          <h1 className="page-title">Dashboard</h1>
-          <p className="muted">Ringkasan pengeluaran bulan ini.</p>
+          <h1 className="page-title">{t('nav.dashboard')}</h1>
+          <p className="muted">{t('dashboard.subtitle')}</p>
         </div>
         <button
           type="button"
@@ -60,59 +62,61 @@ export default function Dashboard() {
           onClick={() => setShowForm(true)}
           disabled={categories.length === 0}
         >
-          <Icon name="plus" size={16} /> Tambah Pengeluaran
+          <Icon name="plus" size={16} /> {t('dashboard.add')}
         </button>
       </div>
 
       {categories.length === 0 && (
         <div className="inline-note">
           <Icon name="alert" size={16} />
-          <span>Buat kategori dulu sebelum mencatat pengeluaran.</span>
+          <span>{t('dashboard.noCategory')}</span>
         </div>
       )}
 
       <div className="stats-grid">
         <StatCard
           icon="wallet"
-          label="Bulan Ini"
+          label={t('dashboard.thisMonth')}
           value={formatIDR(summary.overall)}
-          hint={MONTH_NAME}
+          hint={monthName}
           tone="primary"
         />
         <StatCard
           icon="trend"
-          label="Rata-rata"
+          label={t('dashboard.average')}
           value={formatIDR(avg)}
-          hint="per transaksi"
+          hint={t('dashboard.perTransaction')}
           tone="success"
         />
         <StatCard
           icon="calendar"
-          label="Transaksi"
+          label={t('dashboard.transactions')}
           value={String(transactions)}
-          hint="bulan ini"
+          hint={t('dashboard.thisMonthHint')}
           tone="accent"
         />
         <StatCard
           icon="tag"
-          label="Kategori"
+          label={t('dashboard.categories')}
           value={String(summary.categories.length)}
-          hint="dipakai"
+          hint={t('dashboard.used')}
           tone="warn"
         />
       </div>
 
       <div className="panel">
         <div className="panel-head">
-          <h2>Pengeluaran per Bulan</h2>
-          <span className="muted">{formatIDR(yearTotal)} · {YEAR}</span>
+          <h2>{t('dashboard.monthlyTitle')}</h2>
+          <span className="muted">
+            {formatIDR(yearTotal)} · {YEAR}
+          </span>
         </div>
         <MonthlyChart months={monthly.months} year={monthly.year} />
       </div>
 
       <div className="panel">
         <div className="panel-head">
-          <h2>Rekap Kategori Bulan Ini</h2>
+          <h2>{t('dashboard.recapTitle')}</h2>
           <span className="muted">{formatIDR(summary.overall)}</span>
         </div>
         <CategoryBar data={summary.categories} />

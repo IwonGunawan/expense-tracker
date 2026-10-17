@@ -1,3 +1,5 @@
+import { tr } from './i18n';
+
 const TOKEN_KEY = 'expense_token';
 const USER_KEY = 'expense_user';
 
@@ -40,7 +42,7 @@ export async function api(path, { method = 'GET', body } = {}) {
     clearToken();
     clearUser();
     window.location.href = '/login';
-    throw new Error('Sesi berakhir, login ulang');
+    throw new Error(tr('api.sessionExpired'));
   }
 
   const data = await res.json().catch(() => ({}));

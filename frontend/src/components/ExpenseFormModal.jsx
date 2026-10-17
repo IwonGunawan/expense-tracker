@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import { useI18n } from '../i18n';
 import { formatNumberID, parseNumberID, todayID } from '../utils';
 import Icon from './Icon';
 import { useToast } from './Toast';
 
 export default function ExpenseFormModal({ open, onClose, categories, editing, onSaved }) {
   const toast = useToast();
+  const { t } = useI18n();
   const [amountDisplay, setAmountDisplay] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [description, setDescription] = useState('');
@@ -39,9 +41,9 @@ export default function ExpenseFormModal({ open, onClose, categories, editing, o
   const submit = async (e) => {
     e.preventDefault();
     const rawAmount = parseNumberID(amountDisplay);
-    if (!rawAmount || rawAmount <= 0) return toast.error('Masukkan jumlah yang valid');
-    if (!categoryId) return toast.error('Pilih kategori dulu');
-    if (!categories.length) return toast.error('Buat kategori dulu agar bisa menambah pengeluaran');
+    if (!rawAmount || rawAmount <= 0) return toast.error(t('form.invalidAmount'));
+    if (!categoryId) return toast.error(t('form.pickCategory'));
+    if (!categories.length) return toast.error(t('form.needCategory'));
     setSaving(true);
     try {
       const body = {
@@ -55,7 +57,7 @@ export default function ExpenseFormModal({ open, onClose, categories, editing, o
       } else {
         await api('/expenses', { method: 'POST', body });
       }
-      toast.success(editing ? 'Pengeluaran diperbarui' : 'Pengeluaran ditambahkan');
+      toast.success(editing ? t('form.updated') : t('form.added'));
       onSaved?.();
       onClose();
     } catch (err) {
@@ -73,28 +75,28 @@ export default function ExpenseFormModal({ open, onClose, categories, editing, o
         onSubmit={submit}
       >
         <div className="modal-head">
-          <h3>{editing ? 'Edit Pengeluaran' : 'Tambah Pengeluaran'}</h3>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Tutup">
+          <h3>{editing ? t('form.editTitle') : t('form.addTitle')}</h3>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label={t('common.close')}>
             <Icon name="close" />
           </button>
         </div>
 
         <div className="modal-fields">
           <label className="field">
-            <span className="field-label">Jumlah (Rp)</span>
+            <span className="field-label">{t('form.amount')}</span>
             <input
               type="text"
               inputMode="numeric"
               value={amountDisplay}
               onChange={(e) => setAmountDisplay(formatNumberID(e.target.value))}
-              placeholder="mis: 25.000"
+              placeholder={t('form.amountPlaceholder')}
               autoComplete="off"
               required
             />
           </label>
 
           <label className="field">
-            <span className="field-label">Kategori</span>
+            <span className="field-label">{t('form.category')}</span>
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
@@ -109,17 +111,17 @@ export default function ExpenseFormModal({ open, onClose, categories, editing, o
           </label>
 
           <label className="field">
-            <span className="field-label">Deskripsi</span>
+            <span className="field-label">{t('form.description')}</span>
             <input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="mis: makan siang"
+              placeholder={t('form.descPlaceholder')}
             />
           </label>
 
           <label className="field">
-            <span className="field-label">Tanggal</span>
+            <span className="field-label">{t('form.date')}</span>
             <input
               type="date"
               value={date}
@@ -131,10 +133,14 @@ export default function ExpenseFormModal({ open, onClose, categories, editing, o
 
         <div className="modal-actions">
           <button type="button" className="ghost" onClick={onClose} disabled={saving}>
-            Batal
+            {t('common.cancel')}
           </button>
           <button type="submit" disabled={saving}>
-            {saving ? 'Menyimpan...' : editing ? 'Simpan Perubahan' : 'Tambah'}
+            {saving
+              ? t('common.saving')
+              : editing
+                ? t('form.saveChanges')
+                : t('form.add')}
           </button>
         </div>
       </form>
