@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { clearToken, clearUser, getUser } from '../api';
 import { initialOf } from '../utils';
 import Icon from './Icon';
+import Logo from './Logo';
 
 const LINKS = [
   { to: '/', label: 'Dashboard', icon: 'dashboard', end: true },
@@ -72,8 +73,7 @@ export default function Layout() {
     <div className="shell">
       <header className="topbar">
         <div className="topbar-left">
-          <span className="brand-logo">ET</span>
-          <span className="brand-text">Expense Tracker</span>
+          <Logo size={36} withText subtitle="Kelola pengeluaran" />
         </div>
 
         <nav className="topbar-nav" aria-label="Navigasi">
