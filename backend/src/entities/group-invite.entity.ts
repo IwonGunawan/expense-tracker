@@ -17,7 +17,6 @@ export enum InviteStatus {
 }
 
 @Entity('group_invites')
-@Index(['code'], { unique: true })
 export class GroupInvite {
   @PrimaryGeneratedColumn()
   id: number;
