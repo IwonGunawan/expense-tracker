@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import ExpensesPage from './pages/Expenses';
 import CategoriesPage from './pages/Categories';
 import Settings from './pages/Settings';
+import Groups from './pages/Groups';
 
 function Protected() {
   return getToken() ? <Layout /> : <Navigate to="/login" replace />;
@@ -19,6 +20,7 @@ export default function App() {
         <Route index element={<Dashboard />} />
         <Route path="/expenses" element={<ExpensesPage />} />
         <Route path="/categories" element={<CategoriesPage />} />
+        <Route path="/groups" element={<Groups />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

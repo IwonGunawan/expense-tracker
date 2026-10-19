@@ -69,6 +69,7 @@ export default function Layout() {
     { to: '/', label: t('nav.dashboard'), icon: 'dashboard', end: true },
     { to: '/expenses', label: t('nav.expenses'), icon: 'wallet' },
     { to: '/categories', label: t('nav.categories'), icon: 'tag' },
+    { to: '/groups', label: t('nav.groups', { defaultValue: 'Groups' }), icon: 'users' },
     { to: '/settings', label: t('nav.settings'), icon: 'settings' },
   ];
 
