@@ -6,8 +6,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { pageInfo } from '../common/pagination';
+import { resolveScope } from '../common/scope';
 import { Category } from '../entities/category.entity';
 import { Expense } from '../entities/expense.entity';
+import { GroupMember } from '../entities/group-member.entity';
 import {
   CreateExpenseDto,
   QueryExpenseDto,
@@ -22,15 +24,18 @@ export class ExpensesService {
     private readonly expenses: Repository<Expense>,
     @InjectRepository(Category)
     private readonly categories: Repository<Category>,
+    @InjectRepository(GroupMember)
+    private readonly members: Repository<GroupMember>,
   ) {}
 
-  findAll(userId: number, q: QueryExpenseDto) {
+  async findAll(userId: number, q: QueryExpenseDto) {
+    const scope = await resolveScope(this.members, userId);
     const page = q.page ?? 1;
     const limit = q.limit ?? 10;
     const qb = this.expenses
       .createQueryBuilder('e')
       .leftJoinAndSelect('e.category', 'c')
-      .where('e.userId = :userId', { userId })
+      .where('e.groupId = :scope', { scope })
       .orderBy('e.date', 'DESC')
       .addOrderBy('e.createdAt', 'DESC');
 
@@ -54,46 +59,51 @@ export class ExpensesService {
   }
 
   async create(userId: number, dto: CreateExpenseDto) {
-    await this.assertCategory(userId, dto.categoryId);
+    const scope = await resolveScope(this.members, userId);
+    await this.assertCategory(scope, dto.categoryId);
     const saved = await this.expenses.save(
       this.expenses.create({
         userId,
+        groupId: scope,
         categoryId: dto.categoryId,
         amount: dto.amount.toFixed(2),
         description: dto.description ?? '',
         date: dto.date,
       }),
     );
-    return this.findOne(userId, saved.id);
+    return this.findOne(scope, saved.id);
   }
 
   async update(userId: number, id: number, dto: UpdateExpenseDto) {
-    const expense = await this.findOwned(userId, id);
+    const scope = await resolveScope(this.members, userId);
+    const expense = await this.findOwned(scope, id);
     if (dto.categoryId !== undefined) {
-      await this.assertCategory(userId, dto.categoryId);
+      await this.assertCategory(scope, dto.categoryId);
       expense.categoryId = dto.categoryId;
     }
     if (dto.amount !== undefined) expense.amount = dto.amount.toFixed(2);
     if (dto.description !== undefined) expense.description = dto.description;
     if (dto.date !== undefined) expense.date = dto.date;
     await this.expenses.save(expense);
-    return this.findOne(userId, id);
+    return this.findOne(scope, id);
   }
 
   async remove(userId: number, id: number) {
-    const expense = await this.findOwned(userId, id);
+    const scope = await resolveScope(this.members, userId);
+    const expense = await this.findOwned(scope, id);
     await this.expenses.remove(expense);
     return { success: true };
   }
 
   async summary(userId: number, q: QueryExpenseDto) {
+    const scope = await resolveScope(this.members, userId);
     const qb = this.expenses
       .createQueryBuilder('e')
       .innerJoin(Category, 'c', 'c.id = e.categoryId')
       .select('c.name', 'category')
       .addSelect('SUM(e.amount)', 'total')
       .addSelect('COUNT(e.id)', 'count')
-      .where('e.userId = :userId', { userId })
+      .where('e.groupId = :scope', { scope })
       .groupBy('c.id')
       .orderBy('total', 'DESC');
 
@@ -120,12 +130,13 @@ export class ExpensesService {
   }
 
   async monthly(userId: number, q: QueryMonthlyDto) {
+    const scope = await resolveScope(this.members, userId);
     const year = q.year ?? new Date().getFullYear();
     const rows = await this.expenses
       .createQueryBuilder('e')
       .select('MONTH(e.date)', 'month')
       .addSelect('SUM(e.amount)', 'total')
-      .where('e.userId = :userId', { userId })
+      .where('e.groupId = :scope', { scope })
       .andWhere('YEAR(e.date) = :year', { year })
       .groupBy('MONTH(e.date)')
       .getRawMany<{ month: string; total: string }>();
@@ -142,27 +153,29 @@ export class ExpensesService {
     };
   }
 
-  private async assertCategory(userId: number, categoryId: number) {
+  private async assertCategory(scope: number, categoryId: number) {
     const count = await this.categories.count({
-      where: { id: categoryId, userId },
+      where: { id: categoryId, groupId: scope },
     });
     if (count === 0) {
       throw new BadRequestException('Kategori tidak valid');
     }
   }
 
-  private async findOwned(userId: number, id: number) {
-    const expense = await this.expenses.findOne({ where: { id, userId } });
+  private async findOwned(scope: number, id: number) {
+    const expense = await this.expenses.findOne({
+      where: { id, groupId: scope },
+    });
     if (!expense) throw new NotFoundException('Expense tidak ditemukan');
     return expense;
   }
 
-  private async findOne(userId: number, id: number) {
+  private async findOne(scope: number, id: number) {
     return this.expenses
       .createQueryBuilder('e')
       .leftJoinAndSelect('e.category', 'c')
       .where('e.id = :id', { id })
-      .andWhere('e.userId = :userId', { userId })
+      .andWhere('e.groupId = :scope', { scope })
       .getOne();
   }
 }

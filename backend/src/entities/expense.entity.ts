@@ -16,6 +16,9 @@ export class Expense {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ nullable: true })
+  groupId: number | null;
+
   @Column()
   userId: number;
 

@@ -6,8 +6,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { resolveScope } from '../common/scope';
 import { Category } from '../entities/category.entity';
 import { Expense } from '../entities/expense.entity';
+import { GroupMember } from '../entities/group-member.entity';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto';
 
 @Injectable()
@@ -17,44 +19,56 @@ export class CategoriesService {
     private readonly categories: Repository<Category>,
     @InjectRepository(Expense)
     private readonly expenses: Repository<Expense>,
+    @InjectRepository(GroupMember)
+    private readonly members: Repository<GroupMember>,
   ) {}
 
-  findAll(userId: number) {
+  async findAll(userId: number) {
+    const scope = await resolveScope(this.members, userId);
     return this.categories.find({
-      where: { userId },
+      where: { groupId: scope },
       order: { name: 'ASC' },
     });
   }
 
   async create(userId: number, dto: CreateCategoryDto) {
+    const scope = await resolveScope(this.members, userId);
     const name = dto.name.trim();
-    const exists = await this.categories.findOne({ where: { userId, name } });
+    const exists = await this.categories.findOne({
+      where: { groupId: scope, name },
+    });
     if (exists) throw new ConflictException('Kategori sudah ada');
-    return this.categories.save(this.categories.create({ userId, name }));
+    return this.categories.save(
+      this.categories.create({ groupId: scope, userId, name }),
+    );
   }
 
   async update(userId: number, id: number, dto: UpdateCategoryDto) {
-    const category = await this.findOwned(userId, id);
+    const scope = await resolveScope(this.members, userId);
+    const category = await this.findOwned(scope, id);
     category.name = dto.name.trim();
     return this.categories.save(category);
   }
 
   async remove(userId: number, id: number) {
-    await this.findOwned(userId, id);
+    const scope = await resolveScope(this.members, userId);
+    await this.findOwned(scope, id);
     const used = await this.expenses.count({
-      where: { userId, categoryId: id },
+      where: { groupId: scope, categoryId: id },
     });
     if (used > 0) {
       throw new BadRequestException(
         'Kategori masih dipakai expense, tidak bisa dihapus',
       );
     }
-    await this.categories.delete({ id, userId });
+    await this.categories.delete({ id, groupId: scope });
     return { success: true };
   }
 
-  private async findOwned(userId: number, id: number) {
-    const category = await this.categories.findOne({ where: { id, userId } });
+  private async findOwned(scope: number, id: number) {
+    const category = await this.categories.findOne({
+      where: { id, groupId: scope },
+    });
     if (!category) throw new NotFoundException('Kategori tidak ditemukan');
     return category;
   }

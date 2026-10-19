@@ -11,10 +11,13 @@ import { Expense } from './expense.entity';
 import { User } from './user.entity';
 
 @Entity('categories')
-@Unique(['userId', 'name'])
+@Unique(['groupId', 'name'])
 export class Category {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column({ nullable: true })
+  groupId: number | null;
 
   @Column()
   userId: number;
