@@ -14,6 +14,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useState('login');
 
   if (getToken()) return <Navigate to="/" replace />;
 
@@ -25,7 +26,8 @@ export default function Login() {
     }
     setBusy(true);
     try {
-      const data = await api('/auth/login', {
+      const endpoint = mode === 'register' ? '/auth/register' : '/auth/login';
+      const data = await api(endpoint, {
         method: 'POST',
         body: { username: username.trim(), password },
       });
@@ -68,8 +70,8 @@ export default function Login() {
         <div className="auth-panel">
           <div className="auth-head">
             <Logo size={46} />
-            <h1>{t('login.signInTitle')}</h1>
-            <p className="muted">{t('login.signInSub')}</p>
+            <h1>{mode === 'register' ? t('login.registerTitle') : t('login.signInTitle')}</h1>
+            <p className="muted">{mode === 'register' ? t('login.registerSub') : t('login.signInSub')}</p>
           </div>
 
           <form onSubmit={submit} className="auth-form">
@@ -110,9 +112,27 @@ export default function Login() {
             </label>
 
             <button type="submit" className="btn-primary auth-submit" disabled={busy}>
-              {busy ? t('login.processing') : t('login.signIn')}
+              {busy ? t('login.processing') : mode === 'register' ? t('login.register') : t('login.signIn')}
             </button>
           </form>
+
+          <p className="auth-switch">
+            {mode === 'login' ? (
+              <>
+                {t('login.noAccount')}{' '}
+                <button type="button" className="link auth-link" onClick={() => setMode('register')}>
+                  {t('login.register')}
+                </button>
+              </>
+            ) : (
+              <>
+                {t('login.haveAccount')}{' '}
+                <button type="button" className="link auth-link" onClick={() => setMode('login')}>
+                  {t('login.signIn')}
+                </button>
+              </>
+            )}
+          </p>
 
           <p className="auth-trust">
             <Icon name="check" size={13} /> {t('login.trust')}
