@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -12,11 +13,12 @@ import { User } from './user.entity';
 
 @Entity('categories')
 @Unique(['groupId', 'name'])
+@Index('idx_userId', ['userId'])
 export class Category {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'int', nullable: true })
   groupId: number | null;
 
   @Column()

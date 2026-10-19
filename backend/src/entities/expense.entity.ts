@@ -16,7 +16,7 @@ export class Expense {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'int', nullable: true })
   groupId: number | null;
 
   @Column()

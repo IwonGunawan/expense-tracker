@@ -3,6 +3,14 @@ import { setLocale } from './utils';
 
 const en = {
   'api.sessionExpired': 'Session expired, please log in again',
+  'api.networkError': 'Cannot reach server, try again later',
+  'api.status.400': 'Invalid request',
+  'api.status.401': 'Wrong username or password',
+  'api.status.403': 'Not allowed',
+  'api.status.404': 'Data not found',
+  'api.status.409': 'Data already exists',
+  'api.status.422': 'Invalid input',
+  'api.status.500': 'Server error, try again later',
 
   'common.close': 'Close',
   'common.cancel': 'Cancel',
@@ -146,6 +154,14 @@ const en = {
 
 const id = {
   'api.sessionExpired': 'Sesi berakhir, login ulang',
+  'api.networkError': 'Tidak bisa terhubung ke server, coba lagi nanti',
+  'api.status.400': 'Permintaan tidak valid',
+  'api.status.401': 'Username atau password salah',
+  'api.status.403': 'Akses ditolak',
+  'api.status.404': 'Data tidak ditemukan',
+  'api.status.409': 'Data sudah ada',
+  'api.status.422': 'Input tidak valid',
+  'api.status.500': 'Terjadi kesalahan server, coba lagi nanti',
 
   'common.close': 'Tutup',
   'common.cancel': 'Batal',

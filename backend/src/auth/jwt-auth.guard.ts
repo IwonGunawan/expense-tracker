@@ -1,8 +1,8 @@
 import {
-  BadRequestException,
   CanActivate,
   ExecutionContext,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { AuthedRequest } from './jwt-payload.interface';
@@ -15,7 +15,7 @@ export class JwtAuthGuard implements CanActivate {
     const req = context.switchToHttp().getRequest<AuthedRequest>();
     const header = req.headers.authorization;
     const token = header?.startsWith('Bearer ') ? header.slice(7) : null;
-    if (!token) throw new BadRequestException('Token tidak ada');
+    if (!token) throw new UnauthorizedException('Token tidak ada');
 
     try {
       const payload = await this.jwt.verifyAsync<{
@@ -25,7 +25,7 @@ export class JwtAuthGuard implements CanActivate {
       req.user = { id: payload.sub, username: payload.username };
       return true;
     } catch {
-      throw new BadRequestException('Token tidak valid');
+      throw new UnauthorizedException('Token tidak valid');
     }
   }
 }

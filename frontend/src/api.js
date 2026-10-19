@@ -32,24 +32,30 @@ export async function api(path, { method = 'GET', body } = {}) {
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`/api${path}`, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
-
-  if (res.status === 401) {
-    clearToken();
-    clearUser();
-    window.location.href = '/login';
-    throw new Error(tr('api.sessionExpired'));
+  let res;
+  try {
+    res = await fetch(`/api${path}`, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  } catch {
+    throw new Error(tr('api.networkError'));
   }
 
   const data = await res.json().catch(() => ({}));
+
+  if (res.status === 401 && path !== '/auth/login') {
+    clearToken();
+    clearUser();
+    window.location.href = '/login';
+    throw new Error(data.message || tr('api.sessionExpired'));
+  }
+
   if (!res.ok) {
     const msg = Array.isArray(data.message)
       ? data.message.join(', ')
-      : data.message || `HTTP ${res.status}`;
+      : data.message || tr(`api.status.${res.status}`);
     throw new Error(msg);
   }
   return data;
