@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes } from 'crypto';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import {
   Group,
   GroupMember,
@@ -15,6 +15,8 @@ import {
   GroupInvite,
   InviteStatus,
 } from '../entities';
+import { Expense } from '../entities/expense.entity';
+import { Category } from '../entities/category.entity';
 import { User } from '../entities/user.entity';
 import { CreateGroupDto, InviteUserDto, JoinGroupDto } from './dto';
 
@@ -25,6 +27,8 @@ export class GroupsService {
     @InjectRepository(GroupMember) private members: Repository<GroupMember>,
     @InjectRepository(GroupInvite) private invites: Repository<GroupInvite>,
     @InjectRepository(User) private users: Repository<User>,
+    @InjectRepository(Expense) private expenses: Repository<Expense>,
+    @InjectRepository(Category) private categories: Repository<Category>,
   ) {}
 
   async getMyGroup(userId: number) {
@@ -46,19 +50,8 @@ export class GroupsService {
     await this.members.save(
       this.members.create({ groupId: group.id, userId, role: GroupRole.OWNER }),
     );
+    await this.claimPersonalData(userId, group.id);
     return group;
-  }
-
-  async leaveGroup(userId: number) {
-    const member = await this.members.findOne({
-      where: { userId },
-      relations: { group: true },
-    });
-    if (!member) throw new NotFoundException('Tidak tergabung dalam grup');
-    if (member.role === GroupRole.OWNER)
-      throw new ForbiddenException('Owner tidak bisa keluar grup');
-    await this.members.remove(member);
-    return { success: true };
   }
 
   async inviteUser(userId: number, dto: InviteUserDto) {
@@ -121,11 +114,18 @@ export class GroupsService {
         role: GroupRole.MEMBER,
       }),
     );
+    await this.claimPersonalData(userId, invite.groupId);
     await this.invites.update(invite.id, {
       status: InviteStatus.ACCEPTED,
       acceptedAt: new Date(),
       acceptedById: userId,
     });
     return { success: true, groupId: invite.groupId };
+  }
+  private async claimPersonalData(userId: number, groupId: number) {
+    await this.expenses.update({ userId, groupId: IsNull() }, { groupId });
+    await this.categories.update({ userId, groupId: IsNull() }, { groupId });
+    await this.expenses.update({ userId, groupId: userId }, { groupId });
+    await this.categories.update({ userId, groupId: userId }, { groupId });
   }
 }

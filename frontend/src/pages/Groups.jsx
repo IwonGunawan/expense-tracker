@@ -80,20 +80,6 @@ export default function Groups() {
     }
   };
 
-  const leave = async () => {
-    if (!confirm('Keluar dari grup?')) return;
-    setBusy(true);
-    try {
-      await api('/groups/me', { method: 'DELETE' });
-      toast.success('Berhasil keluar grup');
-      await load();
-    } catch (e) {
-      toast.error(e.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="page-head">
@@ -115,10 +101,7 @@ export default function Groups() {
       {myGroup ? (
         <div className="panel">
           <h2>{myGroup.name}</h2>
-          <p className="muted">Sudah tergabung dalam grup</p>
-          <button type="button" className="btn-danger" onClick={leave} disabled={busy}>
-            <Icon name="logout" size={16} /> Keluar Grup
-          </button>
+          <p className="muted">Anggota grup tidak bisa keluar grup.</p>
         </div>
       ) : (
         <div className="panel">

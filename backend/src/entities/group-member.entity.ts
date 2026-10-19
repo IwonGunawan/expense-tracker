@@ -17,6 +17,7 @@ export enum GroupRole {
 
 @Entity('group_members')
 @Index(['groupId', 'userId'], { unique: true })
+@Index(['userId'], { unique: true })
 export class GroupMember {
   @PrimaryColumn()
   groupId: number;

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { AuthedRequest } from '../auth/jwt-payload.interface';
 import { CreateGroupDto, InviteUserDto, JoinGroupDto } from './dto';
@@ -17,11 +17,6 @@ export class GroupsController {
   @Post()
   createGroup(@Req() req: AuthedRequest, @Body() dto: CreateGroupDto) {
     return this.groups.createGroup(req.user.id, dto);
-  }
-
-  @Delete('me')
-  leaveGroup(@Req() req: AuthedRequest) {
-    return this.groups.leaveGroup(req.user.id);
   }
 
   @Post('invite')

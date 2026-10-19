@@ -3,11 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { Category } from '../entities/category.entity';
 import { Expense } from '../entities/expense.entity';
+import { GroupMember } from '../entities/group-member.entity';
 import { ExpensesController } from './expenses.controller';
 import { ExpensesService } from './expenses.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Expense, Category]), AuthModule],
+  imports: [TypeOrmModule.forFeature([Expense, Category, GroupMember]), AuthModule],
   controllers: [ExpensesController],
   providers: [ExpensesService],
 })
