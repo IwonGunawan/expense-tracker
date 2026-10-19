@@ -1,8 +1,13 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
 export class RegisterDto {
-  @IsEmail()
-  email: string;
+  @IsString()
+  @MinLength(3)
+  @MaxLength(32)
+  @Matches(/^[a-zA-Z0-9_.-]+$/, {
+    message: 'username hanya boleh huruf, angka, titik, underscore, atau strip',
+  })
+  username: string;
 
   @IsString()
   @MinLength(6)
@@ -10,8 +15,10 @@ export class RegisterDto {
 }
 
 export class LoginDto {
-  @IsEmail()
-  email: string;
+  @IsString()
+  @MinLength(3)
+  @MaxLength(32)
+  username: string;
 
   @IsString()
   password: string;

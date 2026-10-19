@@ -10,7 +10,7 @@ import Logo from '../components/Logo';
 export default function Login() {
   const toast = useToast();
   const { t } = useI18n();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -19,7 +19,7 @@ export default function Login() {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (email.trim() === '' || password.length < 6) {
+    if (username.trim().length < 3 || password.length < 6) {
       toast.error(t('login.error'));
       return;
     }
@@ -27,7 +27,7 @@ export default function Login() {
     try {
       const data = await api('/auth/login', {
         method: 'POST',
-        body: { email: email.trim(), password },
+        body: { username: username.trim(), password },
       });
       setToken(data.token);
       setUser(data.user);
@@ -74,14 +74,15 @@ export default function Login() {
 
           <form onSubmit={submit} className="auth-form">
             <label className="field">
-              <span className="field-label">{t('login.email')}</span>
+              <span className="field-label">{t('login.username')}</span>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@email.com"
-                autoComplete="email"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder={t('login.usernamePlaceholder')}
+                autoComplete="username"
                 required
+                minLength={3}
               />
             </label>
 

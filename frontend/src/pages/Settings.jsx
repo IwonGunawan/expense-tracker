@@ -8,7 +8,7 @@ import { useToast } from '../components/Toast';
 export default function Settings() {
   const toast = useToast();
   const { t } = useI18n();
-  const [email, setEmail] = useState(getUser()?.email ?? '');
+  const [username, setUsername] = useState(getUser()?.username ?? '');
 
   const [currentPw, setCurrentPw] = useState('');
   const [newPw, setNewPw] = useState('');
@@ -22,7 +22,7 @@ export default function Settings() {
   useEffect(() => {
     api('/auth/me')
       .then((data) => {
-        setEmail(data.email);
+        setUsername(data.username);
         setUser(data);
       })
       .catch((e) => toast.error(e.message));
@@ -82,9 +82,9 @@ export default function Settings() {
       <div className="panel">
         <h2>{t('settings.account')}</h2>
         <div className="account-row">
-          <span className="avatar avatar-lg">{email?.[0]?.toUpperCase() ?? '?'}</span>
+          <span className="avatar avatar-lg">{username?.[0]?.toUpperCase() ?? '?'}</span>
           <div>
-            <p className="strong">{email || t('common.loading')}</p>
+            <p className="strong">{username || t('common.loading')}</p>
             <p className="muted">{t('settings.accountNote')}</p>
           </div>
         </div>

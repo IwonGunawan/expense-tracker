@@ -6,7 +6,7 @@ import { initialOf } from '../utils';
 import Icon from './Icon';
 import Logo from './Logo';
 
-function ProfileMenu({ email, onLogout }) {
+function ProfileMenu({ username, onLogout }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -29,11 +29,11 @@ function ProfileMenu({ email, onLogout }) {
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
-        {initialOf(email)}
+        {initialOf(username)}
       </button>
       {open && (
         <div className="dropdown">
-          <span className="dropdown-email">{email ?? '—'}</span>
+          <span className="dropdown-username">{username ?? '—'}</span>
           <button
             type="button"
             className="dropdown-item"
@@ -53,10 +53,10 @@ function ProfileMenu({ email, onLogout }) {
 export default function Layout() {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const [email, setEmail] = useState(null);
+  const [username, setUsername] = useState(null);
 
   useEffect(() => {
-    setEmail(getUser()?.email ?? null);
+    setUsername(getUser()?.username ?? null);
   }, []);
 
   const logout = () => {
@@ -93,7 +93,7 @@ export default function Layout() {
         </nav>
 
         <LangSwitch />
-        <ProfileMenu email={email} onLogout={logout} />
+        <ProfileMenu username={username} onLogout={logout} />
       </header>
 
       <main className="shell-main">

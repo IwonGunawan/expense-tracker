@@ -30,6 +30,7 @@ export default function ExpensesPage() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const sentinelRef = useRef(null);
   const fetchRef = useRef({ monthValue: '', filterCat: '' });
@@ -128,6 +129,43 @@ export default function ExpensesPage() {
     setFilterCat('');
   };
 
+  const exportXls = async () => {
+    setExporting(true);
+    try {
+      const { from, to } = rangeFromMonth(monthValue);
+      const params = new URLSearchParams({
+        limit: '100',
+        ...(from && { from }),
+        ...(to && { to }),
+        ...(filterCat && { categoryId: filterCat }),
+      });
+      const data = await api(`/expenses?${params}`);
+      if (data.items.length === 0) {
+        toast.error(t('expenses.empty'));
+        return;
+      }
+      const headers = [t('expenses.thDate'), t('expenses.thCategory'), t('expenses.thDescription'), t('expenses.thAmount')];
+      const rowsHtml = data.items
+        .map(
+          (r) =>
+            `<tr><td>${r.date}</td><td>${r.category?.name ?? ''}</td><td>${r.description ?? ''}</td><td>${r.amount}</td></tr>`,
+        )
+        .join('');
+      const html = `<html><head><meta charset="utf-8" /></head><body><table border="1"><thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
+      const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `expenses-${new Date().toISOString().slice(0, 10)}.xls`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast.success(t('expenses.exported'));
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <>
@@ -148,14 +186,24 @@ export default function ExpensesPage() {
           <h1 className="page-title">{t('expenses.title')}</h1>
           <p className="muted">{t('expenses.meta', { total: meta.total })}</p>
         </div>
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={openAdd}
-          disabled={categories.length === 0}
-        >
-          <Icon name="plus" size={16} /> {t('expenses.add')}
-        </button>
+        <div className="head-actions">
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={exportXls}
+            disabled={exporting || meta.total === 0}
+          >
+            <Icon name="download" size={16} /> {exporting ? t('common.processing') : t('expenses.export')}
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={openAdd}
+            disabled={categories.length === 0}
+          >
+            <Icon name="plus" size={16} /> {t('expenses.add')}
+          </button>
+        </div>
       </div>
 
       {categories.length === 0 && (

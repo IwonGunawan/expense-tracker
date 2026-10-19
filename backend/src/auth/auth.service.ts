@@ -29,27 +29,27 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const email = dto.email.toLowerCase().trim();
-    const exists = await this.users.findOne({ where: { email } });
-    if (exists) throw new ConflictException('Email sudah terdaftar');
+    const username = dto.username.trim();
+    const exists = await this.users.findOne({ where: { username } });
+    if (exists) throw new ConflictException('Username sudah terdaftar');
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
     const user = await this.users.save(
-      this.users.create({ email, passwordHash }),
+      this.users.create({ username, passwordHash }),
     );
     return this.sign(user);
   }
 
   async login(dto: LoginDto) {
-    const email = dto.email.toLowerCase().trim();
+    const username = dto.username.trim();
     const user = await this.users
       .createQueryBuilder('u')
       .addSelect('u.passwordHash')
-      .where('u.email = :email', { email })
+      .where('u.username = :username', { username })
       .getOne();
 
     if (!user || !(await bcrypt.compare(dto.password, user.passwordHash))) {
-      throw new UnauthorizedException('Email atau password salah');
+      throw new UnauthorizedException('Username atau password salah');
     }
     return this.sign(user);
   }
@@ -57,7 +57,7 @@ export class AuthService {
   async me(userId: number) {
     const user = await this.users.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User tidak ditemukan');
-    return { id: user.id, email: user.email };
+    return { id: user.id, username: user.username };
   }
 
   async changePassword(userId: number, dto: ChangePasswordDto) {
@@ -96,7 +96,7 @@ export class AuthService {
   }
 
   private sign(user: User) {
-    const token = this.jwt.sign({ sub: user.id, email: user.email });
-    return { token, user: { id: user.id, email: user.email } };
+    const token = this.jwt.sign({ sub: user.id, username: user.username });
+    return { token, user: { id: user.id, username: user.username } };
   }
 }

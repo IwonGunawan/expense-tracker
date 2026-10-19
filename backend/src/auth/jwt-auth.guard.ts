@@ -20,9 +20,9 @@ export class JwtAuthGuard implements CanActivate {
     try {
       const payload = await this.jwt.verifyAsync<{
         sub: number;
-        email: string;
+        username: string;
       }>(token);
-      req.user = { id: payload.sub, email: payload.email };
+      req.user = { id: payload.sub, username: payload.username };
       return true;
     } catch {
       throw new BadRequestException('Token tidak valid');
