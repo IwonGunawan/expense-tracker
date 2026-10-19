@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { AuthedRequest } from '../auth/jwt-payload.interface';
 import { CreateGroupDto, InviteUserDto, JoinGroupDto } from './dto';
@@ -27,6 +36,32 @@ export class GroupsController {
   @Get('invites')
   listInvites(@Req() req: AuthedRequest) {
     return this.groups.listInvites(req.user.id);
+  }
+
+  @Get('invites/received')
+  listReceivedInvites(@Req() req: AuthedRequest) {
+    return this.groups.listReceivedInvites(req.user.id);
+  }
+
+  @Get('members')
+  listMembers(@Req() req: AuthedRequest) {
+    return this.groups.listMembers(req.user.id);
+  }
+
+  @Post('invites/:id/accept')
+  acceptInvite(
+    @Req() req: AuthedRequest,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.groups.acceptInvite(req.user.id, id);
+  }
+
+  @Post('invites/:id/reject')
+  rejectInvite(
+    @Req() req: AuthedRequest,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.groups.rejectInvite(req.user.id, id);
   }
 
   @Post('join')

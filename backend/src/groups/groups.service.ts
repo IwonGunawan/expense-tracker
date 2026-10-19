@@ -37,7 +37,7 @@ export class GroupsService {
       relations: { group: true },
     });
     if (!member) return null;
-    return member.group;
+    return { ...member.group, role: member.role };
   }
 
   async createGroup(userId: number, dto: CreateGroupDto) {
@@ -60,6 +60,8 @@ export class GroupsService {
       throw new ForbiddenException(
         'Harus tergabung dalam grup untuk mengundang',
       );
+    if (inviter.role !== GroupRole.OWNER)
+      throw new ForbiddenException('Hanya admin grup yang bisa mengundang');
 
     const target = await this.users.findOne({
       where: { username: dto.username },
@@ -73,6 +75,16 @@ export class GroupsService {
     });
     if (targetMember)
       throw new ConflictException('User sudah tergabung dalam grup');
+
+    const pending = await this.invites.findOne({
+      where: {
+        groupId: inviter.groupId,
+        invitedUsername: dto.username,
+        status: InviteStatus.PENDING,
+      },
+    });
+    if (pending)
+      throw new ConflictException('Undangan untuk user ini sudah dikirim');
 
     const code = randomBytes(4).toString('hex');
     const invite = await this.invites.save(
@@ -93,6 +105,81 @@ export class GroupsService {
       where: { groupId: member.groupId, status: InviteStatus.PENDING },
       relations: { invitedBy: true },
     });
+  }
+
+  async listReceivedInvites(userId: number) {
+    const user = await this.users.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User tidak ditemukan');
+    const member = await this.members.findOne({ where: { userId } });
+    if (member) return [];
+    return this.invites.find({
+      where: { invitedUsername: user.username, status: InviteStatus.PENDING },
+      relations: { group: true, invitedBy: true },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async listMembers(userId: number) {
+    const member = await this.members.findOne({ where: { userId } });
+    if (!member) return [];
+    const list = await this.members.find({
+      where: { groupId: member.groupId },
+      relations: { user: true },
+      order: { joinedAt: 'ASC' },
+    });
+    return list.map((m) => ({
+      id: m.userId,
+      username: m.user.username,
+      role: m.role,
+      joinedAt: m.joinedAt,
+    }));
+  }
+
+  async acceptInvite(userId: number, inviteId: number) {
+    const user = await this.users.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User tidak ditemukan');
+
+    const invite = await this.invites.findOne({ where: { id: inviteId } });
+    if (!invite || invite.status !== InviteStatus.PENDING)
+      throw new NotFoundException('Undangan tidak ditemukan atau sudah diproses');
+    if (invite.invitedUsername !== user.username)
+      throw new ForbiddenException('Undangan ini bukan untukmu');
+
+    const existing = await this.getMyGroup(userId);
+    if (existing) throw new ConflictException('Kamu sudah tergabung dalam grup');
+
+    await this.members.save(
+      this.members.create({
+        groupId: invite.groupId,
+        userId,
+        role: GroupRole.MEMBER,
+      }),
+    );
+    await this.claimPersonalData(userId, invite.groupId);
+    await this.invites.update(invite.id, {
+      status: InviteStatus.ACCEPTED,
+      acceptedAt: new Date(),
+      acceptedById: userId,
+    });
+    return { success: true, groupId: invite.groupId };
+  }
+
+  async rejectInvite(userId: number, inviteId: number) {
+    const user = await this.users.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User tidak ditemukan');
+
+    const invite = await this.invites.findOne({ where: { id: inviteId } });
+    if (!invite || invite.status !== InviteStatus.PENDING)
+      throw new NotFoundException('Undangan tidak ditemukan atau sudah diproses');
+    if (invite.invitedUsername !== user.username)
+      throw new ForbiddenException('Undangan ini bukan untukmu');
+
+    await this.invites.update(invite.id, {
+      status: InviteStatus.REJECTED,
+      acceptedAt: new Date(),
+      acceptedById: userId,
+    });
+    return { success: true };
   }
 
   async joinGroup(userId: number, dto: JoinGroupDto) {

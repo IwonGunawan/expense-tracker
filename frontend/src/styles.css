@@ -203,6 +203,19 @@
   }
   .avatar-lg { width: 46px; height: 46px; font-size: 15px; }
 
+  .member-list { margin-top: 16px; display: flex; flex-direction: column; }
+  .member-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+  }
+  .member-row:first-child { border-top: 0; }
+  .member-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .member-info .strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .member-row > .pill { margin-left: auto; }
+
   .logo { display: inline-flex; align-items: center; gap: 10px; }
   .logo-mark { display: block; border-radius: 10px; box-shadow: 0 8px 20px -8px rgba(5, 150, 105, 0.5); }
   .logo-text { display: flex; flex-direction: column; line-height: 1.15; }
