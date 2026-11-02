@@ -111,6 +111,7 @@ const en = {
   'expenses.deleted': 'Expense deleted',
   'expenses.export': 'Export XLS',
   'expenses.exported': 'File downloaded',
+  'expenses.detailTitle': 'Expense Details',
 
   'categories.title': 'Categories',
   'categories.subtitle': 'Manage your expense categories.',
@@ -272,6 +273,7 @@ const id = {
   'expenses.deleted': 'Pengeluaran dihapus',
   'expenses.export': 'Export XLS',
   'expenses.exported': 'File diunduh',
+  'expenses.detailTitle': 'Detail Pengeluaran',
 
   'categories.title': 'Kategori',
   'categories.subtitle': 'Kelola kategori pengeluaranmu.',

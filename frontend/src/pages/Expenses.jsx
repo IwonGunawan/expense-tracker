@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useI18n } from '../i18n';
@@ -28,6 +28,7 @@ export default function ExpensesPage() {
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -166,46 +167,29 @@ export default function ExpensesPage() {
     }
   };
 
+  const grouped = useMemo(() => {
+    const sorted = [...items].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    const groups = [];
+    for (const row of sorted) {
+      const key = String(row.date || '').slice(0, 10);
+      const last = groups[groups.length - 1];
+      if (!last || last.date !== key) {
+        groups.push({ date: key, items: [row] });
+      } else {
+        last.items.push(row);
+      }
+    }
+    return groups;
+  }, [items]);
+
   if (loading) {
-    return (
-      <>
-        <div className="page-head">
-          <h1 className="page-title">{t('expenses.title')}</h1>
-          <p className="muted">{t('common.loading')}</p>
-        </div>
-      </>
-    );
+    return <p className="muted">{t('common.loading')}</p>;
   }
 
   const hasActiveFilter = monthValue || filterCat;
 
   return (
     <>
-      <div className="page-head">
-        <div>
-          <h1 className="page-title">{t('expenses.title')}</h1>
-          <p className="muted">{t('expenses.meta', { total: meta.total })}</p>
-        </div>
-        <div className="head-actions">
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={exportXls}
-            disabled={exporting || meta.total === 0}
-          >
-            <Icon name="download" size={16} /> {exporting ? t('common.processing') : t('expenses.export')}
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={openAdd}
-            disabled={categories.length === 0}
-          >
-            <Icon name="plus" size={16} /> {t('expenses.add')}
-          </button>
-        </div>
-      </div>
-
       {categories.length === 0 && (
         <div className="inline-note">
           <Icon name="alert" size={16} />
@@ -217,27 +201,26 @@ export default function ExpensesPage() {
         </div>
       )}
 
-      <div className="toolbar">
-        <label className="filter-field">
-          <span className="filter-label">{t('expenses.month')}</span>
-          <input
-            type="month"
-            value={monthValue}
-            onChange={(e) => setMonthValue(e.target.value)}
-          />
-        </label>
+      <div className="filter-bar">
+        <input
+          type="month"
+          aria-label={t('expenses.month')}
+          value={monthValue}
+          onChange={(e) => setMonthValue(e.target.value)}
+        />
 
-        <label className="filter-field">
-          <span className="filter-label">{t('expenses.category')}</span>
-          <select value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
-            <option value="">{t('expenses.filterAll')}</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <select
+          aria-label={t('expenses.category')}
+          value={filterCat}
+          onChange={(e) => setFilterCat(e.target.value)}
+        >
+          <option value="">{t('expenses.filterAll')}</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
 
         {hasActiveFilter && (
           <button type="button" className="ghost small filter-reset" onClick={resetFilters}>
@@ -246,62 +229,42 @@ export default function ExpensesPage() {
         )}
       </div>
 
-      <div className="panel table-panel">
-        <div className="table-wrap">
-          <table className="tbl">
-            <thead>
-              <tr>
-                <th>{t('expenses.thDate')}</th>
-                <th>{t('expenses.thCategory')}</th>
-                <th>{t('expenses.thDescription')}</th>
-                <th className="right">{t('expenses.thAmount')}</th>
-                <th className="right">{t('expenses.thActions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="center">
-                    <EmptyState
-                      icon="wallet"
-                      title={t('expenses.empty')}
-                      hint={hasActiveFilter ? t('expenses.emptyHintFilter') : t('expenses.emptyHint')}
-                    />
-                  </td>
-                </tr>
-              ) : (
-                items.map((row) => (
-                  <tr key={row.id}>
-                    <td className="mono small">{formatDateID(row.date)}</td>
-                    <td>
-                      <span className="pill">{row.category?.name ?? '-'}</span>
-                    </td>
-                    <td>{row.description || <span className="muted">—</span>}</td>
-                    <td className="right mono strong">{formatIDR(row.amount)}</td>
-                    <td className="right">
-                      <button
-                        type="button"
-                        className="icon-btn"
-                        onClick={() => openEdit(row)}
-                        title={t('common.edit')}
-                      >
-                        <Icon name="pencil" size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        className="icon-btn danger"
-                        onClick={() => setPendingDeleteId(row.id)}
-                        title={t('common.delete')}
-                      >
-                        <Icon name="trash" size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      <div className="panel list-panel">
+        {items.length === 0 ? (
+          <EmptyState
+            icon="wallet"
+            title={t('expenses.empty')}
+            hint={hasActiveFilter ? t('expenses.emptyHintFilter') : t('expenses.emptyHint')}
+          />
+        ) : (
+          <div className="expense-list">
+            {grouped.map((group) => (
+              <section className="date-group" key={group.date}>
+                <header className="date-group-head">
+                  <span className="date-group-title">{formatDateID(group.date)}</span>
+                  <span className="date-group-total mono">{formatIDR(group.items.reduce((sum, r) => sum + (Number(r.amount) || 0), 0))}</span>
+                </header>
+                <div className="date-group-items">
+                  {group.items.map((row) => (
+                    <button
+                      type="button"
+                      className="expense-item"
+                      key={row.id}
+                      onClick={() => setDetail(row)}
+                      aria-label={`${row.description || t('expenses.thDescription')} ${formatIDR(row.amount)}`}
+                    >
+                      <span className="expense-item-desc">
+                        {row.description || <span className="muted">—</span>}
+                      </span>
+                      <span className="expense-item-amount">{formatIDR(row.amount)}</span>
+                      <Icon name="chevron-right" size={16} className="expense-item-chevron" />
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
         <div ref={sentinelRef} className="scroll-sentinel" aria-hidden="true">
           {loadingMore && <span className="muted small">{t('common.loading')}</span>}
         </div>
@@ -315,15 +278,101 @@ export default function ExpensesPage() {
         onSaved={resetAndLoad}
       />
 
-      <ConfirmModal
-        open={pendingDeleteId !== null}
-        title={t('expenses.confirmTitle')}
-        message={t('expenses.confirmMsg')}
-        confirmLabel={t('common.delete')}
-        danger
-        onCancel={() => setPendingDeleteId(null)}
-        onConfirm={commitDelete}
-      />
+      {detail && (
+        <div className="sheet-backdrop" onMouseDown={() => setDetail(null)}>
+          <div
+            className="bottom-sheet expense-detail"
+            role="dialog"
+            aria-modal="true"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="sheet-handle" aria-hidden="true" />
+            <div className="sheet-head">
+              <h3>{t('expenses.detailTitle')}</h3>
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() => setDetail(null)}
+                aria-label={t('common.close')}
+              >
+                <Icon name="close" />
+              </button>
+            </div>
+
+            <div className="detail-list">
+              <div className="detail-row">
+                <span className="detail-label">{t('expenses.thDate')}</span>
+                <span className="detail-value">{formatDateID(detail.date)}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">{t('expenses.thCategory')}</span>
+                <span className="detail-value">
+                  <span className="pill">{detail.category?.name ?? '-'}</span>
+                </span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">{t('expenses.thDescription')}</span>
+                <span className="detail-value">{detail.description || <span className="muted">—</span>}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">{t('expenses.thAmount')}</span>
+                <span className="detail-value mono strong">{formatIDR(detail.amount)}</span>
+              </div>
+            </div>
+
+            <div className="sheet-actions">
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => {
+                  const row = detail;
+                  setDetail(null);
+                  openEdit(row);
+                }}
+              >
+                <Icon name="pencil" size={16} /> {t('common.edit')}
+              </button>
+              <button
+                type="button"
+                className="btn-danger"
+                onClick={() => {
+                  const id = detail.id;
+                  setDetail(null);
+                  setPendingDeleteId(id);
+                }}
+              >
+                <Icon name="trash" size={16} /> {t('common.delete')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {(!detail && !showForm && pendingDeleteId === null) && (
+        <div className="fab-group">
+          <button
+            type="button"
+            className="fab fab-secondary"
+            onClick={exportXls}
+            disabled={exporting || meta.total === 0}
+            aria-label={t('expenses.export')}
+            title={t('expenses.export')}
+          >
+            <Icon name="download" size={18} />
+          </button>
+          <button
+            type="button"
+            className="fab fab-primary"
+            onClick={openAdd}
+            disabled={categories.length === 0}
+            aria-label={t('expenses.add')}
+            title={t('expenses.add')}
+          >
+            <Icon name="plus" size={22} />
+          </button>
+        </div>
+      )}
+
     </>
   );
 }
