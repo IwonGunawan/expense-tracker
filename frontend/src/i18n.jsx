@@ -372,14 +372,30 @@ export function I18nProvider({ children }) {
 export function LangSwitch({ className = '' }) {
   const { lang, setLang, t } = useI18n();
   return (
-    <button
-      type="button"
-      className={`ghost small lang-btn ${className}`.trim()}
-      onClick={() => setLang(lang === 'en' ? 'id' : 'en')}
+    <div
+      className={`lang-switch ${className}`.trim()}
+      role="group"
       aria-label={t('lang.switch')}
       title={t('lang.switch')}
     >
-      {lang === 'en' ? 'EN' : 'ID'}
-    </button>
+      <button
+        type="button"
+        className={`lang-switch-btn ${lang === 'id' ? 'active' : ''}`.trim()}
+        onClick={() => setLang('id')}
+        aria-pressed={lang === 'id'}
+        aria-label="ID"
+      >
+        ID
+      </button>
+      <button
+        type="button"
+        className={`lang-switch-btn ${lang === 'en' ? 'active' : ''}`.trim()}
+        onClick={() => setLang('en')}
+        aria-pressed={lang === 'en'}
+        aria-label="EN"
+      >
+        EN
+      </button>
+    </div>
   );
 }
